@@ -43,6 +43,7 @@ public class FmsFilterInvocationSecurityMetadataSource implements FilterInvocati
 
 
         Permission permission;
+        log.info(" permissions.containsKey(key) : {} ", permissions.containsKey(key));
         if (permissions.containsKey(key)) {
             permission = permissions.get(key);
         } else {
@@ -74,4 +75,5 @@ public class FmsFilterInvocationSecurityMetadataSource implements FilterInvocati
         return FilterInvocation.class.isAssignableFrom(clazz);
 
     }
-}
+
+

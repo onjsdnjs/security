@@ -2,16 +2,20 @@ package com.example.demo.config;
 
 
 import com.example.demo.service.MenuRoleService;
+import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.vote.AffirmativeBased;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 
@@ -33,11 +37,16 @@ import java.util.List;
 @EnableGlobalMethodSecurity(securedEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Autowired
-    SampleAuthenticationEntryPoint sampleAuthenticationEntryPoint;
 
     @Autowired
     MenuRoleService menuRoleService;
+
+    @Autowired
+    UserService userService;
+
+    @Autowired
+    CustomAuthenticationProvider customAuthenticationProvider;
+
 
     @Override
     public void configure(WebSecurity web) throws Exception {
@@ -52,13 +61,30 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/**").authenticated()
-                .and()
+                .antMatchers("/mypage").hasRole("HONG")
+//                .antMatchers("/**").authenticated()
+                .antMatchers("/**").permitAll()
+//                .and()
                 // 인증이 되지 않았을 경우(비로그인)에는 AuthenticationEntryPoint 부분에서 AuthenticationException 을 발생 시키고,
                 // 인증(로그인)은 되었으나 해당 요청에 대한 권한이 없을 경우에는 AccessDeniedHandler 부분에서 AccessDeniedException 이 발생된다.
-                .exceptionHandling().authenticationEntryPoint(sampleAuthenticationEntryPoint)
+//                .exceptionHandling().authenticationEntryPoint(sampleAuthenticationEntryPoint())
                 .and()
                 .addFilterAfter(filterSecurityInterceptor(), FilterSecurityInterceptor.class);
+
+
+        http
+                .formLogin()
+                // 로그인 페이지 : url 매핑을 하지 않으면 기본 제공되는 로그인 페이지가 뜬다.
+//                .loginPage("/login")
+                .loginProcessingUrl("/auth/login")
+                .usernameParameter("username")
+                .passwordParameter("password")
+                .defaultSuccessUrl("/mypage") // 성공했을때 리다이렉트 url
+                .and()
+                .logout()
+                .logoutUrl("/auth/logout");
+
+        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
 
     }
@@ -70,6 +96,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         filterSecurityInterceptor.setAuthenticationManager(authenticationManager()); // 사용자 권한
         filterSecurityInterceptor.setAccessDecisionManager(affirmativeBased()); //판단
         return filterSecurityInterceptor;
+    }
+
+    @Bean
+    public AuthenticationEntryPoint sampleAuthenticationEntryPoint() {
+        SampleAuthenticationEntryPoint sampleAuthenticationEntryPoint = new SampleAuthenticationEntryPoint();
+        return sampleAuthenticationEntryPoint;
+    }
+
+    /*
+      인증 객체를 만드는 클래스 : AuthenticationManagerBuilder
+
+      인증처리 과정
+       1) 접속자가 계정과 암호를 입력한다.
+       2) 접속자가 입력한 계정을 이용하여 데이터베이서에서 사용자 정보를 조회한 결과를 UserDetails 라는 곳에 담는다.
+       3) DB로부터 이용자 정보와 화면에서 입력한 정보를 비교하여 일치 한다면 사용자 정보를 사용할 수 있게 허가 한다.
+       이 일을 담당하는 것이 AuthenticationProvider 가 하는 역활이다.
+     */
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userService);
+        auth.authenticationProvider(customAuthenticationProvider);
     }
 
 

@@ -56,6 +56,7 @@ public class FmsAccessDecisionVoter implements AccessDecisionVoter<FilterInvocat
                 }
             }
         }
+        log.info(" ACCESS? : {} ", containAuthority ? ACCESS_GRANTED : ACCESS_DENIED);
         return containAuthority ? ACCESS_GRANTED : ACCESS_DENIED;
     }
 

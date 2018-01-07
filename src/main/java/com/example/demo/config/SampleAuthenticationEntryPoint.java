@@ -21,13 +21,17 @@ import java.util.Enumeration;
 // 인증을 요구하는 페이지에 인증이 되지 않은 경우(비로그인)에는
 // AuthenticationEntryPoint 부분에서 AuthenticationException 을 발생
 @Slf4j
-@Component
 public class SampleAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException, ServletException {
         log.info(" Don't access this url ");
+        log.info(" authException.getMessage() : {}", authException.getMessage() );
+        log.info(" authException.getCause() : {}", authException.getCause());
+
+
+        log.info(" [SampleAuthenticationEntryPoint]request.getRequestURI : {} ", request.getRequestURI());
 
         // 직접 URI 치고 들어오는경우 content-type이 없어 null일 수가 있다
         String contentType = request.getHeader("Content-Type");
@@ -35,7 +39,13 @@ public class SampleAuthenticationEntryPoint implements AuthenticationEntryPoint 
         if (contentType != null) {
             boolean isAjax = contentType.contains("application/json");
 
-            // 호출 케이스별 리턴타입 결정
+            /*
+                호출 케이스별 리턴타입 결정
+                 1. Ajax -> 손님 접근 불가
+                 2. Web  -> (1) 손님 접근 불가
+                         -> (2) 로그인 페이지 (url로 구분)
+                         -> (3) redirect:String (url로 구분)
+             */
             if (isAjax) {
                 // JSON
 

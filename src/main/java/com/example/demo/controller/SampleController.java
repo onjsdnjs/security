@@ -17,10 +17,21 @@ public class SampleController {
     }
 
 
-    @Secured("ROLE_USER")
+    @Secured("ROLE_HONG")
     @ResponseBody
     @RequestMapping("/mypage")
     public String mypage() {
         return "This is mypage !!";
     }
+
+
+    @ResponseBody
+    @RequestMapping("/admin/page")
+    public String admin() { return "Admin page !!";}
+
+
+    @Secured("ROLE_ANONYMOUS")
+    @ResponseBody
+    @RequestMapping("/user")
+    public String user() { return "User page !!";}
 }
