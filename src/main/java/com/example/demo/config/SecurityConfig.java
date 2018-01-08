@@ -15,6 +15,8 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
@@ -64,11 +66,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/mypage").hasRole("HONG")
 //                .antMatchers("/**").authenticated()
                 .antMatchers("/**").permitAll()
-//                .and()
+                .and()
                 // 인증이 되지 않았을 경우(비로그인)에는 AuthenticationEntryPoint 부분에서 AuthenticationException 을 발생 시키고,
                 // 인증(로그인)은 되었으나 해당 요청에 대한 권한이 없을 경우에는 AccessDeniedHandler 부분에서 AccessDeniedException 이 발생된다.
 //                .exceptionHandling().authenticationEntryPoint(sampleAuthenticationEntryPoint())
-                .and()
+//                .and()
                 .addFilterAfter(filterSecurityInterceptor(), FilterSecurityInterceptor.class);
 
 
@@ -99,6 +101,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
     public AuthenticationEntryPoint sampleAuthenticationEntryPoint() {
         SampleAuthenticationEntryPoint sampleAuthenticationEntryPoint = new SampleAuthenticationEntryPoint();
         return sampleAuthenticationEntryPoint;
@@ -115,7 +122,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userService);
+        auth.userDetailsService(userService).passwordEncoder(passwordEncoder());
         auth.authenticationProvider(customAuthenticationProvider);
     }
 

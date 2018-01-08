@@ -19,7 +19,8 @@ import java.util.Enumeration;
  */
 
 // 인증을 요구하는 페이지에 인증이 되지 않은 경우(비로그인)에는
-// AuthenticationEntryPoint 부분에서 AuthenticationException 을 발생
+// AuthenticationEntryPoint 부분에서
+// 을 발생
 @Slf4j
 public class SampleAuthenticationEntryPoint implements AuthenticationEntryPoint {
 

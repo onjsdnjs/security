@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -25,10 +26,16 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     @Autowired
     UserService userService;
 
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
+        // 입력한 암호를 암호화 한다.
         String password = (String) authentication.getCredentials();
+
 
         log.info(" username : {}, password : {} ", username, password);
 
@@ -38,9 +45,18 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         try {
             user = (User) userService.loadUserByUsername(username);
 
-            // 이용자가 로그인 폼에서 입력한 비밀번호와 DB로부터 가져온 암호화된 비밀번호를 비교한다
-            if (!user.getPassword().equals(password))
-                throw new BadCredentialsException("비밀번호 불일치");
+            String bcryptPassword = passwordEncoder.encode(user.getPassword());
+            log.info(" password from DB : {} ", bcryptPassword);
+
+            /*
+                동일한 비밀번호를 입력했지만, 암호화를해서 DB에 저장된 값과 새로 암호화한 값이 다르기 때문에 비교가 불가
+                이것을 match 함수가 해결해준다
+                이용자가 로그인 폼에서 입력한 비밀번호와 DB로부터 가져온 암호화된 비밀번호를 비교한다
+             */
+            if ( !passwordEncoder.matches(password, bcryptPassword) ) {
+                throw new BadCredentialsException( "암호가 일치하지 않습니다." );
+            }
+
 
             log.info(" password matching !!");
 

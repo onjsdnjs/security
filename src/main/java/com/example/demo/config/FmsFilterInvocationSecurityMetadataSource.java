@@ -75,5 +75,6 @@ public class FmsFilterInvocationSecurityMetadataSource implements FilterInvocati
         return FilterInvocation.class.isAssignableFrom(clazz);
 
     }
+}
 
 
